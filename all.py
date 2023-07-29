@@ -1,5 +1,5 @@
 from aws_cdk import core
-from aws_cdk import aws_codecommit, aws_codebuild, aws_codepipeline, aws_codepipeline_actions
+from aws_cdk import aws_ec2, aws_codecommit, aws_codebuild, aws_codepipeline, aws_codepipeline_actions
 from aws_cdk import aws_s3, aws_cloudfront, aws_route53, aws_route53_targets
 
 class MyCdkAppStack(core.Stack):
@@ -7,14 +7,20 @@ class MyCdkAppStack(core.Stack):
     def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # Create a CodeCommit repository
-        code_commit_repo = aws_codecommit.Repository(self, "MyCodeCommitRepo", repository_name="MyAppRepo")
+        # Create a VPC with two private subnets and one public subnet
+        vpc = aws_ec2.Vpc(self, "MyAppVPC", max_azs=2, subnet_configuration=[
+            aws_ec2.SubnetConfiguration(name="Public", subnet_type=aws_ec2.SubnetType.PUBLIC),
+            aws_ec2.SubnetConfiguration(name="Private", subnet_type=aws_ec2.SubnetType.PRIVATE)
+        ])
 
-        # Create an S3 bucket
-        s3_bucket = aws_s3.Bucket(self, "MyS3Bucket")
+        # Create a CodeCommit repository in the private subnet
+        code_commit_repo = aws_codecommit.Repository(self, "MyCodeCommitRepo", repository_name="MyAppRepo", vpc=vpc)
 
-        # Create a CodeBuild project
-        code_build_project = aws_codebuild.PipelineProject(self, "MyCodeBuildProject",
+        # Create an S3 bucket in the private subnet
+        s3_bucket = aws_s3.Bucket(self, "MyS3Bucket", vpc=vpc)
+
+        # Create a CodeBuild project in the private subnet
+        code_build_project = aws_codebuild.PipelineProject(self, "MyCodeBuildProject", vpc=vpc,
             build_spec=aws_codebuild.BuildSpec.from_object(dict(
                 version="0.2",
                 phases=dict(
@@ -67,7 +73,7 @@ class MyCdkAppStack(core.Stack):
         )
         deploy_stage.add_action(deploy_action)
 
-        # Create CloudFront distribution
+        # Create CloudFront distribution with public access
         cloudfront_distribution = aws_cloudfront.CloudFrontWebDistribution(self, "MyCloudFrontDistribution",
             origin_configs=[
                 aws_cloudfront.SourceConfiguration(
