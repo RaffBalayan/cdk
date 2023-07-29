@@ -7,9 +7,8 @@ class MyCdkAppStack(core.Stack):
     def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # Create a VPC with two private subnets and one public subnet
+        # Create a VPC with private subnets only
         vpc = aws_ec2.Vpc(self, "MyAppVPC", max_azs=2, subnet_configuration=[
-            aws_ec2.SubnetConfiguration(name="Public", subnet_type=aws_ec2.SubnetType.PUBLIC),
             aws_ec2.SubnetConfiguration(name="Private", subnet_type=aws_ec2.SubnetType.PRIVATE)
         ])
 
