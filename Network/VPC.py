@@ -15,7 +15,7 @@ class VPCStack(Stack):
            enable_dns_support=True,
            subnet_configuration=[
                ec2.SubnetConfiguration(
-                   name="Privateee",
+                   name="Private",
                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED,
                    cidr_mask=22,
                )
@@ -23,7 +23,6 @@ class VPCStack(Stack):
         )
 
         priv_subnets = [subnet.subnet_id for subnet in self.vpc.private_subnets]
-
         count = 1
         for ps in priv_subnets:
             ssm.StringParameter(self, 'private-subnet-'+str(count),
