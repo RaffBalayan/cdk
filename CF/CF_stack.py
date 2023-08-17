@@ -1,4 +1,4 @@
-from aws_cdk import (Stack, aws_cloudfront as cdn, aws_ssm as ssm,aws_s3 as s3)
+from aws_cdk import (Stack, aws_cloudfront as cdn, aws_ssm as ssm, aws_s3 as s3)
 from constructs import Construct
 
 
@@ -28,4 +28,12 @@ class CFStack(Stack):
                         )
                                               ]
                     )
+        ssm.StringParameter(self,"cdn-dist-id",
+               parameter_name="/"+env_name+"/app-distribution-id",
+               string_value="https://"+cdn_id.distribution_id
+        )
 
+        ssm.StringParameter(self,"cdn-url",
+               parameter_name="/"+env_name+"/app-cdn-url",
+               string_value="https://"+cdn_id.distribution_domain_name
+        )
