@@ -1,7 +1,6 @@
 from aws_cdk import (Stack, aws_cloudfront as cdn, aws_ssm as ssm, aws_s3 as s3, aws_iam as iam, aws_codepipeline as cp,
-                     aws_codecommit as ccm )
+                     aws_codecommit as ccm , aws_codepipeline_actions as cp_actions )
 from constructs import Construct
-
 class Pipeline(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, s3bucket, **kwargs) -> None:
@@ -9,7 +8,7 @@ class Pipeline(Stack):
 
         env_name = self.node.try_get_context("env")
 
-        cal_bucket = s3.Bucket.from_bucket_name(self,'cal-bucket-id',bucket_name=s3bucket)
+        cal_bucket = s3.Bucket.from_bucket_name(self,'cal-bucket-id',bucket_name= )
         cdn_id = ssm.StringParameter.from_string_parameter_name(self,"cdni-d",string_parameter_name="/"+env_name+"/app-distribution-id")
         source_repo = ccm.Repository.from_repository_name(self, "RepoId",repository_name="calculator")
 
@@ -22,4 +21,6 @@ class Pipeline(Stack):
                                artifac_bucket=artifac_bucket,
                                restart_execution_on_update=False)
         Source_output = cp.Artifact(artifact_name="source")
-        
+        build_artifact = cp.Artifact(artifact_name="build")
+
+        pipeline.add_stage(stage_name="Source", actions=[cp_actions.CodeCommitSourceAction(action_name="")])
