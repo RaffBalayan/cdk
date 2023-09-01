@@ -15,7 +15,7 @@ class S3Stack(Stack):
         lambda_bucket = s3.Bucket(self, 'weight-calculator',
             access_control=s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
             encryption=s3.BucketEncryption.S3_MANAGED,
-            bucket_name=account_id+'-'+env_name+'-Weight-Calculator',
+            bucket_name=account_id+'-'+env_name+'-weight-calculator',
             block_public_access=s3.BlockPublicAccess(
                 block_public_acls=True,
                 block_public_policy=True,

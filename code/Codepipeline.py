@@ -8,9 +8,9 @@ class Pipeline(Stack):
 
         env_name = self.node.try_get_context("env")
 
-        cal_bucket = s3.Bucket.from_bucket_name(self,'cal-bucket-id',bucket_name=s3bucket)
-        cdn_id = ssm.StringParameter.from_string_parameter_name(self,"cdni-d",string_parameter_name="/"+env_name+"/app-distribution-id")
-        source_repo = ccm.Repository.from_repository_name(self, "RepoId",repository_name="calculator")
+        cal_bucket = s3.Bucket.from_bucket_name(self, 'cal- -id', bucket_name=s3bucket)
+        cdn_id = ssm.StringParameter.from_string_parameter_name(self, "cdni-d", string_parameter_name="/"+env_name+"/app-distribution-id")
+        source_repo = ccm.Repository.from_repository_name(self, "repoId", repository_name="calculator")
 
         artifac_bucket = s3.Bucket(self,"ArtifactBucket",
                                    encryption=s3.BucketEncryption.S3_MANAGED,
@@ -20,25 +20,30 @@ class Pipeline(Stack):
                                          description="weighting calculator",
                                          environment=cb.BuildEnvironment(build_image=cb.LinuxBuildImage.STANDARD_3_0,
                                                                          environment_variables={
-                                                                        "distibutionid": cb.BuildEnvironmentVariable(value=cdn_id)
+                                                                        "distibutionid": cb.BuildEnvironmentVariable(value=cdn_id.string_value)
                                                                          }),
-                                         cache=cb.Cache.bucket(bucket=artifac_bucket,prefix="codebuild-cache"),
+                                         cache=cb.Cache.bucket(bucket=artifac_bucket, prefix="codebuild-cache")
                                         )
 
-        pipeline = cp.Pipeline(self,"calculator_pipeline",
+        pipeline = cp.Pipeline(self, "calculator_pipeline",
                                pipeline_name=env_name+"-calculator_pipeline",
-                               artifac_bucket=artifac_bucket,
-                               restart_execution_on_update=False)
-        source_output = cp.Artifact(artifact_name="source"),
+                               artifact_bucket=artifac_bucket,
+                               restart_execution_on_update=False
+                               )
+
+        source_output = cp.Artifact(artifact_name="source")
         build_output = cp.Artifact(artifact_name="build")
 
         pipeline.add_stage(stage_name="Source", actions=[
             cp_actions.CodeCommitSourceAction(
                 action_name="CodeCommitSource",
                 repository=source_repo,
-                output=source_output)])
+                output=source_output,
+                branch="main"
+            )
+        ])
 
-        pipeline.add_stage(stage_name="Build",actions=[
+        pipeline.add_stage(stage_name="Build", actions=[
             cp_actions.CodeBuildAction(
                 action_name="Build",
                 input=source_output,
@@ -47,7 +52,7 @@ class Pipeline(Stack):
             )
         ])
 
-        pipeline.add_stage(stage_name="Deploy",actions=[
+        pipeline.add_stage(stage_name="Deploy", actions=[
              cp_actions.S3DeployAction(
                  bucket=cal_bucket,
                  input=build_output,

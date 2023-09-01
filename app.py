@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 import aws_cdk as cdk
-from Network.VPC import VPCStack
-from SG.SG import SGStack
+#from Network.VPC import VPCStack
+#from SG.SG import SGStack
 from Storage.s3Stack import S3Stack
 from CF.CF_stack import CFStack
 from code.Codepipeline import Pipeline
 from code.codecommit import CodecommitStack
-
 app = cdk.App()
-vpc_stack = VPCStack(app, "vpc")
-sg_stack = SGStack(app, "sg-stack", vpc=vpc_stack.vpc)
+#vpc_stack = VPCStack(app, "vpc")
+#sg_stack = SGStack(app, "sg-stack", vpc=vpc_stack.vpc)
 s3_stack = S3Stack(app, "s3stack")
+code = CodecommitStack(app, 'codecommit')
 cdn_stack = CFStack(app, "cdn", s3bucket=cdk.Fn.import_value("Calculator-bucket"))
-pipeline = CodecommitStack(app,'pipeline', webhostingbucket=core.Fn.import_value('frontend-bucket'))
-
+pipeline = Pipeline(app, 'pipeline', s3bucket=cdk.Fn.import_value("Calculator-bucket"))
 
 app.synth()
 
