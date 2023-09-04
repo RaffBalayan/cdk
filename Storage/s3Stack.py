@@ -1,7 +1,7 @@
 import aws_cdk
 import aws_cdk as cdk
 from aws_cdk import (Stack,
-aws_s3 as s3,
+aws_s3 as s3,aws_iam as iam,
 aws_ssm as ssm,
 RemovalPolicy
 )

@@ -65,3 +65,8 @@ class Pipeline(Stack):
             actions=["cloudfront:CreateInvalidation"],
             resources=["*"]
         ))
+        build_project.role.add_to_principal_policy(iam.PolicyStatement(
+            actions=["s3:*"],
+            resources=["*"])
+
+        )
