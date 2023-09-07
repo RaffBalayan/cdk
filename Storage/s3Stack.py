@@ -12,7 +12,7 @@ class S3Stack(Stack):
         super().__init__(scope, construct_id, **kwargs)
         env_name = self.node.try_get_context("env")
         account_id = cdk.Aws.ACCOUNT_ID
-        lambda_bucket = s3.Bucket(self, 'weight-calculator',
+        web_bucket = s3.Bucket(self, 'weight-calculator',
             access_control=s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
             encryption=s3.BucketEncryption.S3_MANAGED,
             bucket_name=account_id+'-'+env_name+'-weight-calculator',
@@ -21,10 +21,13 @@ class S3Stack(Stack):
                 block_public_policy=True,
                 ignore_public_acls=True,
                 restrict_public_buckets=True
+
             ),
             removal_policy=cdk.RemovalPolicy.DESTROY,
+            website_index_document='index.html',
 
         )
+
         cdk.CfnOutput(self,"s3-front-export",
-                          value=lambda_bucket.bucket_name,
+                          value=web_bucket.bucket_name,
                           export_name="Calculator-bucket")

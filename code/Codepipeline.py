@@ -16,14 +16,14 @@ class Pipeline(Stack):
                                    encryption=s3.BucketEncryption.S3_MANAGED,
                                     access_control=s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL)
         build_project=cb.PipelineProject(self,"calculator_app",
-                                         project_name="calculator",
-                                         description="weighting calculator",
-                                         environment=cb.BuildEnvironment(build_image=cb.LinuxBuildImage.STANDARD_3_0,
-                                                                         environment_variables={
-                                                                        "distibutionid": cb.BuildEnvironmentVariable(value=cdn_id.string_value)
-                                                                         }),
-                                         cache=cb.Cache.bucket(bucket=artifac_bucket, prefix="codebuild-cache")
-                                        )
+             project_name="calculator",
+             description="weighting calculator",
+             environment=cb.BuildEnvironment(build_image=cb.LinuxBuildImage.STANDARD_3_0,
+                                             environment_variables={
+                                            "distributionid": cb.BuildEnvironmentVariable(value=cdn_id.string_value),
+                                             }),
+             cache=cb.Cache.bucket(bucket=artifac_bucket, prefix="codebuild-cache")
+            )
 
         pipeline = cp.Pipeline(self, "calculator_pipeline",
                                pipeline_name=env_name+"-calculator_pipeline",
