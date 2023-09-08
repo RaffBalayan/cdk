@@ -8,11 +8,7 @@ class CFStack(Stack):
 
         env_name = self.node.try_get_context("env")
         bucket_name = s3.Bucket.from_bucket_name(self, "s3bucket", s3bucket)
-        oai = cdn.OriginAccessIdentity(
-            self,
-            "OAI",
 
-        )
         self.cdn_id = cdn.CloudFrontWebDistribution(self,"webSiteCloudeFront",
             origin_configs=[
                 cdn.SourceConfiguration(
@@ -22,8 +18,7 @@ class CFStack(Stack):
                     ],
                     s3_origin_source=cdn.S3OriginConfig(
                         s3_bucket_source=bucket_name,
-                        origin_access_identity=oai,
-
+                        origin_access_identity=cdn.OriginAccessIdentity(self, "myOriginAccessIdentity")
 
 
 
