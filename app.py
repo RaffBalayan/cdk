@@ -9,9 +9,11 @@ from code.codecommit import CodecommitStack
 app = cdk.App()
 #vpc_stack = VPCStack(app, "vpc")
 #sg_stack = SGStack(app, "sg-stack", vpc=vpc_stack.vpc)
+
 s3_stack = S3Stack(app, "s3stack")
+cf_stack = CFStack(app, "cf", s3bucket=cdk.Fn.import_value("Calculator-bucket"))
 code = CodecommitStack(app, 'codecommit')
-cdn_stack = CFStack(app, "cdn", s3bucket=cdk.Fn.import_value("Calculator-bucket"))
+
 pipeline = Pipeline(app, 'pipeline', s3bucket=cdk.Fn.import_value("Calculator-bucket"))
 
 app.synth()
