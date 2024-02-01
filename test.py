@@ -75,5 +75,66 @@ class S3Stack(Stack):
 
 ___________
 
-web_bucket.add_to_resource_policy(
-    permission=iam.PolicyStatement(actions=["s3:GetObject"], effect=iam.Effect.ALLOW, principals=[]))
+
+export class HelloCdkStack extends Stack {
+  constructor(scope: App, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    const myFirstBucket = new Bucket(this, 'MyFirstBucket', {
+      versioned: true,
+      encryption: BucketEncryption.S3_MANAGED,
+      bucketName: 'cdk-example-bucket-for-test',
+      websiteIndexDocument: 'index.html',
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL
+    });
+
+    new BucketDeployment(this, 'DeployWebsite', {
+      sources: [Source.asset('dist')],
+      destinationBucket: myFirstBucket
+    });
+
+    const oia = new OriginAccessIdentity(this, 'OIA', {
+      comment: "Created by CDK"
+    });
+    myFirstBucket.grantRead(oia);
+
+    new CloudFrontWebDistribution(this, 'cdk-example-distribution', {
+      originConfigs: [
+        {
+          s3OriginSource: {
+            s3BucketSource: myFirstBucket,
+            originAccessIdentity: oia
+          },
+          behaviors: [
+            { isDefaultBehavior: true }
+          ]
+        }
+      ]
+    });
+  }
+}
+
+~~~~~~~~~~~~
+
+
+- name: online-weight-calculator
+  origin_access_identity: true
+  encryption: S3_MANAGED
+  access_control: BUCKET_OWNER_FULL_CONTROL
+  block_public_access:
+    block_public_acls: false
+    block_public_policy: false
+    ignore_public_acls: false
+    restrict_public_buckets: false
+  removal_policy: RETAIN
+  export_cfn_output: false
+  event_notifications:
+    - name: invalidate_online_weight_calculator
+      lambda_name: cache-invalidator
+      s3n_type: lambda
+      event_actions:
+        - action: OBJECT_CREATED
+          filters:
+            - type: suffix
+              filter: index.html
+

@@ -5,8 +5,9 @@ from Storage.s3Stack import S3Stack
 
 
 class CFStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, s3bucket, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str,s3bucket , **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
         env_name = self.node.try_get_context("env")
         bucket_name = s3.Bucket.from_bucket_name(self, "s3bucket", s3bucket)
 
@@ -27,17 +28,6 @@ class CFStack(Stack):
                     error_code=400, response_code=200, response_page_path="/"
                 )
             ],
-        )
-
-        s3_bucket = s3.Bucket.from_bucket_name(self, "weight-calculator-iam-for-cf", "weight-calculator")
-
-        s3_bucket.add_to_resource_policy(
-            permission=iam.PolicyStatement(
-                actions=["s3:GetObject"],
-                effect=iam.Effect.ALLOW,
-                resources=[f"{s3_bucket.bucket_arn}/*"],
-                principals=[iam.ArnPrincipal(arn=f"arn:aws:cloudfront::{cdk.Aws.ACCOUNT_ID}:distribution/{self.cdn_id.distribution_id}")],
-            )
         )
 
         ssm.StringParameter(

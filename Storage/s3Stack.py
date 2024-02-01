@@ -4,7 +4,7 @@ from aws_cdk import (
     aws_s3 as s3,
     aws_iam as iam,
     aws_ssm as ssm,
-    aws_cloudfront as cdn,
+    aws_cloudfront as cf,
     RemovalPolicy,
 )
 from constructs import Construct
@@ -32,17 +32,28 @@ class S3Stack(Stack):
             website_index_document='index.html',
         )
 
-        oai = cdn.OriginAccessIdentity(self, id="weighting-calculator-OAI")
+        oai = cf.OriginAccessIdentity(self, "weighting-calculator-OAI")
 
         web_bucket.add_to_resource_policy(
             permission=iam.PolicyStatement(
-                actions=["s3:GetObject*","s3:GetObject*","s3:List*"],
+                actions=["s3:GetObject"],
                 effect=iam.Effect.ALLOW,
-                resources=[f"{web_bucket.bucket_arn}/*"],
-                principals=[iam.ArnPrincipal(arn=oai.cloud_front_origin_access_identity_s3_canonical_user_id)],
+                resources=[web_bucket.arn_for_objects(key_pattern="*")],
+                principals=[iam.ArnPrincipal(arn="*")],
             )
         )
 
-        cdk.CfnOutput(
-            self, "s3-front-export", value=web_bucket.bucket_name, export_name="Calculator-bucket"
+
+
+
+
+
+
+        ssm.StringParameter(
+            self,
+            "bucket_name",
+            parameter_name='web_bucket_name',
+            string_value=web_bucket.bucket_name
         )
+
+        cdk.CfnOutput(self,"s3-export",value=web_bucket.bucket_name, export_name="Calculator-bucket")
