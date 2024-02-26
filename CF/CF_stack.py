@@ -1,6 +1,10 @@
-from aws_cdk import Stack, aws_cloudfront as cdn, aws_ssm as ssm, aws_iam as iam, aws_s3 as s3
+from aws_cdk import Stack, aws_cloudfront as cdn, aws_ssm as ssm, aws_iam as iam, aws_s3 as s3,aws_route53 as r53,aws_route53_targets as targets
 from constructs import Construct
 import aws_cdk as cdk
+from aws_cdk import aws_lambda as _lambda
+from aws_cdk.aws_iam import PolicyStatement
+
+
 from Storage.s3Stack import S3Stack
 
 
@@ -10,6 +14,7 @@ class CFStack(Stack):
 
         env_name = self.node.try_get_context("env")
         bucket_name = s3.Bucket.from_bucket_name(self, "s3bucket", s3bucket)
+
 
         self.cdn_id = cdn.CloudFrontWebDistribution(
             self,
@@ -28,6 +33,22 @@ class CFStack(Stack):
                     error_code=400, response_code=200, response_page_path="/"
                 )
             ],
+        )
+
+        lambda_function = _lambda.Function(
+            self, "CloudFrontInvalidationFunction",
+            runtime=_lambda.Runtime.PYTHON_3_8,
+            handler="lambda_handler.handler",
+            code=_lambda.Code.from_asset("path/to/your/lambda/code"),
+
+        )
+
+        # Grant permissions
+        lambda_function.add_to_role_policy(
+            PolicyStatement(
+                actions=["cloudfront:CreateInvalidation"],
+                resources=["*"],
+            )
         )
 
         ssm.StringParameter(
