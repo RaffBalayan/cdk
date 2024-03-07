@@ -1,24 +1,16 @@
-# lambda_function.py
-
 import boto3
-import json
 
-def lambda_handler(event, context):
-    cloudfront = boto3.client('cloudfront')
-    distribution_id = 'E1QEX8XV0GDSNS'
-    invalidation = cloudfront.create_invalidation(
+def handler(event, context):
+    client = boto3.client('cloudfront')
+    distribution_id = 'YOUR_DISTRIBUTION_ID'  # Replace with your distribution ID
+    invalidation = client.create_invalidation(
         DistributionId=distribution_id,
         InvalidationBatch={
             'Paths': {
                 'Quantity': 1,
-                'Items': [
-                    '/*'  # Invalidate everything. Adjust this to target specific paths.
-                ]
+                'Items': ['/*']  # Invalidate all files
             },
-            'CallerReference': str(event['time'])  # Use the event time as a unique reference
+            'CallerReference': 'some-unique-string'
         }
     )
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Cache invalidation request submitted successfully.')
-    }
+    return invalidation

@@ -5,7 +5,7 @@ from aws_cdk import (
     aws_iam as iam,
     aws_ssm as ssm,
     aws_cloudfront as cf,
-    RemovalPolicy,
+    aws_s3_notifications as s3n
 )
 from constructs import Construct
 
@@ -43,11 +43,17 @@ class S3Stack(Stack):
             )
         )
 
+#        web_bucket.add_to_resource_policy()
 
-
-
-
-
+        # lambda_name = ssm.StringParameter.from_string_parameter_name(self, "lambda_function_name",
+        #                                                string_parameter_name="lambda_function").string_value
+        #
+        # bucket = s3.Bucket.from_bucket_attributes(self, "ImportedBucket",
+        #                                           bucket_arn=f"arn:aws:s3:::my-bucket"
+        #                                           )
+        #
+        # bucket.add_event_notification(s3.EventType.OBJECT_CREATED,
+        #                                           s3n.LambdaDestination(lambda_name))
 
         ssm.StringParameter(
             self,

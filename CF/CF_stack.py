@@ -35,22 +35,6 @@ class CFStack(Stack):
             ],
         )
 
-        lambda_function = _lambda.Function(
-            self, "CloudFrontInvalidationFunction",
-            runtime=_lambda.Runtime.PYTHON_3_8,
-            handler="lambda_handler.handler",
-            code=_lambda.Code.from_asset("path/to/your/lambda/code"),
-
-        )
-
-        # Grant permissions
-        lambda_function.add_to_role_policy(
-            PolicyStatement(
-                actions=["cloudfront:CreateInvalidation"],
-                resources=["*"],
-            )
-        )
-
         ssm.StringParameter(
             self,
             "cdn-dist-id",
