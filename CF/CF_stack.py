@@ -1,11 +1,7 @@
 from aws_cdk import Stack, aws_cloudfront as cdn, aws_ssm as ssm, aws_iam as iam, aws_s3 as s3,aws_route53 as r53,aws_route53_targets as targets
 from constructs import Construct
 import aws_cdk as cdk
-from aws_cdk import aws_lambda as _lambda
-from aws_cdk.aws_iam import PolicyStatement
 
-
-from Storage.s3Stack import S3Stack
 
 
 class CFStack(Stack):

@@ -13,8 +13,8 @@ class LambdaStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, s3bucket: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        cal_bucket = ssm.StringParameter.from_string_parameter_name(self, "bucket_name",
-                                                                      string_parameter_name="web_bucket_name")
+        # cal_bucket = ssm.StringParameter.from_string_parameter_name(self, "bucket_name",
+        #                                                               string_parameter_name="web_bucket_name")
 
         # Define the Lambda function
         lambda_function = _lambda.Function(
@@ -57,7 +57,7 @@ class LambdaStack(Stack):
             website_index_document='index.html',
         )
 
-
+        cdk.CfnOutput(self, "s3-export", value=web_bucket.bucket_name, export_name="Calculator-bucket")
 
         web_bucket.add_to_resource_policy(
             permission=iam.PolicyStatement(
@@ -68,4 +68,4 @@ class LambdaStack(Stack):
             )
         )
 
-
+        web_bucket.add_event_notification(s3.EventType.OBJECT_CREATED, s3n.LambdaDestination(lambda_function))
