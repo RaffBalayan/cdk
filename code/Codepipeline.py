@@ -9,7 +9,7 @@ class Pipeline(Stack):
         env_name = self.node.try_get_context("env")
 
         cal_bucket = s3.Bucket.from_bucket_name(self, 'cal- -id', bucket_name=s3bucket)
-        cdn_id = ssm.StringParameter.from_string_parameter_name(self, "cdni-d", string_parameter_name="/"+env_name+"/app-distribution-id")
+        cdn_id = ssm.StringParameter.from_string_parameter_name(self, "cdni-d", string_parameter_name=f"/{env_name}/app-distribution-id")
         source_repo = ccm.Repository.from_repository_name(self, "repoId", repository_name="calculator")
 
         artifac_bucket = s3.Bucket(self,"ArtifactBucket",

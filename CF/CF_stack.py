@@ -45,9 +45,9 @@ class CFStack(Stack):
             string_value=f"https://{self.cdn_id.distribution_domain_name}",
         )
 
-        ssm.StringParameter(
-            self,
-            "cdn-arn",
-            parameter_name=f"/{env_name}/cdn-arn",
-            string_value=f"arn:aws:cloudfront::{cdk.Aws.ACCOUNT_ID}:distribution/{self.cdn_id.distribution_id}",
-        )
+        # ssm.StringParameter(
+        #     self,
+        #     "cdn-arn",
+        #     parameter_name=f"/{env_name}/cdn-arn",
+        #     string_value=f"arn:aws:cloudfront::{cdk.Aws.ACCOUNT_ID}:distribution/{self.cdn_id.distribution_id}",
+        # )
