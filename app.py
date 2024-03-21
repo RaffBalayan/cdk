@@ -21,7 +21,7 @@ add_access = Addaccess(app, 'addaccess')
 
 s3_stack.add_dependency(aws_lam)
 cf_stack.add_dependency(s3_stack)
-pipeline.add_dependency(add_access)
-add_access.add_dependency(cf_stack)
+pipeline.add_dependency(cf_stack)
+add_access.add_dependency(pipeline)
 
 app.synth()

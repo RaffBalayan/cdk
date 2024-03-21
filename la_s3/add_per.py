@@ -37,7 +37,8 @@ class Addaccess(Stack):
             self,
             "distribution_id",
             string_parameter_name=f"/{env_name}/app-distribution-id"
-        )
+        ).string_value
+
 
         lambda_function = _lambda.Function.from_function_arn(
             self,
@@ -45,16 +46,22 @@ class Addaccess(Stack):
             lambda_arn_parameter.string_value
         )
 
+        cloudfront_distribution_arn = f"arn:aws:cloudfront::{self.account}:distribution/{destrinution_id_ssm}"
+        print(cloudfront_distribution_arn)
 
-        lambda_function.add_to_role_policy(
-            PolicyStatement(
+        lambda_function.add_to_role_policy(iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
                 actions=["cloudfront:CreateInvalidation"],
-                resources=[f"arn:aws:cloudfront:::distribution/{destrinution_id_ssm}"],
+                resources=[cloudfront_distribution_arn],
             )
         )
 
+
+
+
+
         lambda_function.add_to_role_policy(
-            PolicyStatement(
+            PolicyStatement(effect=iam.Effect.ALLOW,
                             actions=["s3:GetObject", "s3:PutObject"],
                             resources=[f"{web_bucket.bucket_arn}/*"] ))
 
@@ -63,7 +70,7 @@ class Addaccess(Stack):
         lambda_function.add_permission(
             's3-service-principal',
             principal=iam.ServicePrincipal('s3.amazonaws.com'),
-            action='lambda:InvokeFunction',
+            # action='lambda:InvokeFunction',
             source_arn=web_bucket.bucket_arn,
         )
 
