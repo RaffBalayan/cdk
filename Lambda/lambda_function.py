@@ -1,9 +1,13 @@
 import boto3
 
-def handler(event, context):
-    client = boto3.client('cloudfront')
-    distribution_id = 'E1Q69E65H3UFSK'
-    invalidation = client.create_invalidation(
+def  lambda_handler(event, context):
+    ssm = boto3.client('ssm')
+    cloudfront = boto3.client('cloudfront')
+
+    parameter = ssm.get_parameter(Name='/cloudfront/distributionId', WithDecryption=True)
+    distribution_id = parameter['Parameter']['Value']
+
+    invalidation = cloudfront.create_invalidation(
         DistributionId=distribution_id,
         InvalidationBatch={
             'Paths': {

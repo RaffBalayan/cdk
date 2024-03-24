@@ -1,7 +1,8 @@
 import aws_cdk as cdk
-from aws_cdk import aws_lambda as _lambda, aws_s3 as s3, Stack, aws_iam as iam, aws_s3_notifications as s3n, aws_ssm as ssm
+from aws_cdk import aws_lambda as _lambda, aws_s3 as s3, Stack, aws_iam as iam, aws_s3_notifications as s3n, aws_ssm as ssm, aws_iam as iam
 from constructs import Construct
 
+import aws_cdk.aws_lambda_event_sources as eventsources
 
 
 class S3BucketStack(Stack):
@@ -11,7 +12,7 @@ class S3BucketStack(Stack):
         env_name = self.node.try_get_context("env")
         account_id = cdk.Aws.ACCOUNT_ID
 
-        self.web_bucket = s3.Bucket(
+        web_bucket = s3.Bucket(
             self,
             'weight-calculator',
             access_control=s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
@@ -27,36 +28,79 @@ class S3BucketStack(Stack):
             website_index_document='index.html',
         )
 
-        cdk.CfnOutput(self, "s3-export", value=self.web_bucket.bucket_name, export_name="Calculator-bucket")
+        cdk.CfnOutput(self, "s3-export", value=web_bucket.bucket_name, export_name="Calculator-bucket")
 
-        self.web_bucket.add_to_resource_policy(
+        web_bucket.add_to_resource_policy(
             iam.PolicyStatement(
                 actions=["s3:GetObject"],
                 effect=iam.Effect.ALLOW,
-                resources=[self.web_bucket.arn_for_objects("*")],
-                principals=[iam.AnyPrincipal()],
+                resources=[web_bucket.arn_for_objects("*")],
+                principals=[iam.ArnPrincipal(arn="*")],
             )
         )
 
-        # lambda_arn_parameter = ssm.StringParameter.from_string_parameter_name(
-        #     self,
-        #     "lambdaFunctionArn",
-        #     string_parameter_name="Lambda_arn"
-        # )
+        distribution_id = ssm.StringParameter.from_string_parameter_name(
+            self,
+            "distribution_id",
+            string_parameter_name=f"/{env_name}/app-distribution-id"
+        ).string_value
 
-        # lambda_function = _lambda.Function.from_function_arn(
-        #     self,
-        #     "LambdaFunction",
-        #     lambda_arn_parameter.string_value
-        # )
+        lambda_function = _lambda.Function(
+            self, "CloudFrontInvalidationLambda",
+            runtime=_lambda.Runtime.PYTHON_3_8,
+            function_name="CloudFrontInvalidationLambda",
+            handler="lambda_function.lambda_handler",
+            code=_lambda.Code.from_asset("Lambda/awsla.zip"),
+            environment={
+                'cf_distribution_id': distribution_id
+            }
+        )
 
 
-        # self.web_bucket.add_event_notification(s3.EventType.OBJECT_CREATED, s3n.LambdaDestination(lambda_function))
+
+
+
+        lambda_function.add_to_role_policy(
+            iam.PolicyStatement(effect=iam.Effect.ALLOW,
+                                actions=["s3:GetObject", "s3:PutObject"],
+                                resources=[f"{web_bucket.bucket_arn}/*"]))
+
+
+        lambda_function.role.add_to_principal_policy(iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=["cloudfront:CreateInvalidation"],
+            resources=[f"arn:aws:cloudfront::{account_id}:distribution/{distribution_id}"]
+        ))
+
+
+        lambda_function.add_permission(
+            's3-service-principal',
+            principal=iam.ServicePrincipal('s3.amazonaws.com'),
+            action='lambda:InvokeFunction',
+            source_arn=web_bucket.bucket_arn,
+        )
+
+
+
+
+
+
+        web_bucket.add_event_notification(s3.EventType.OBJECT_CREATED, s3n.LambdaDestination(lambda_function))
+
+        # lambda_function.role.add_to_principal_policy(iam.PolicyStatement(
+        #     effect=iam.Effect.ALLOW,
+        #     actions=["ssm:GetParameter"],
+        #     resources=[f"arn:aws:ssm:eu-central-1:{account_id}:parameter/{env_name}/app-distribution-id"]
+        # ))
 
 
         ssm.StringParameter(
             self,
             "bucket-arn",
             parameter_name=f"{env_name}-weight-calculator",
-            string_value=self.web_bucket.bucket_arn,
+            string_value=web_bucket.bucket_arn,
         )
+
+        ssm.StringParameter(self, "lambda_name", parameter_name="Lambda_arn",
+                            string_value=lambda_function.function_arn)
+

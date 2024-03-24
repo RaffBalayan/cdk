@@ -15,10 +15,12 @@ from aws_cdk.aws_iam import PolicyStatement
 
 
 class Addaccess(Stack):
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str,   **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         env_name = self.node.try_get_context("env")
+        account_id = cdk.Aws.ACCOUNT_ID
+
 
         s3_arn = ssm.StringParameter.from_string_parameter_name(
             self,
@@ -33,48 +35,32 @@ class Addaccess(Stack):
             string_parameter_name="Lambda_arn"
         )
 
-        destrinution_id_ssm = ssm.StringParameter.from_string_parameter_name(
+        distribution_id = ssm.StringParameter.from_string_parameter_name(
             self,
             "distribution_id",
             string_parameter_name=f"/{env_name}/app-distribution-id"
         ).string_value
 
 
-        lambda_function = _lambda.Function.from_function_arn(
-            self,
-            "LambdaFunction",
-            lambda_arn_parameter.string_value
-        )
+        # lambda_function = _lambda.Function.from_function_arn(
+        #     self,
+        #     "LambdaFunction",
+        #     lambda_arn_parameter.string_value
+        # )
 
-        cloudfront_distribution_arn = f"arn:aws:cloudfront::{self.account}:distribution/{destrinution_id_ssm}"
-        print(cloudfront_distribution_arn)
 
-        lambda_function.add_to_role_policy(iam.PolicyStatement(
-                effect=iam.Effect.ALLOW,
-                actions=["cloudfront:CreateInvalidation"],
-                resources=[cloudfront_distribution_arn],
-            )
-        )
+
+        _lambda.Function.from_function_arn(self,"la_id",function_arn=lambda_arn_parameter.string_value).role.add_to_principal_policy(iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=["cloudfront:CreateInvalidation"],
+            resources=[f"arn:aws:cloudfront::{account_id}:distribution/{distribution_id}"]
+        ))
 
 
 
 
 
-        lambda_function.add_to_role_policy(
-            PolicyStatement(effect=iam.Effect.ALLOW,
-                            actions=["s3:GetObject", "s3:PutObject"],
-                            resources=[f"{web_bucket.bucket_arn}/*"] ))
 
-
-
-        lambda_function.add_permission(
-            's3-service-principal',
-            principal=iam.ServicePrincipal('s3.amazonaws.com'),
-            # action='lambda:InvokeFunction',
-            source_arn=web_bucket.bucket_arn,
-        )
-
-        web_bucket.add_event_notification(s3.EventType.OBJECT_CREATED, s3n.LambdaDestination(lambda_function))
 
 
 

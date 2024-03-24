@@ -2,6 +2,7 @@ import aws_cdk as cdk
 from aws_cdk import aws_lambda as _lambda,  Stack, aws_iam as iam, aws_ssm as ssm,aws_s3 as s3
 from constructs import Construct
 from aws_cdk.aws_iam import PolicyStatement
+import aws_cdk.aws_lambda_event_sources as eventsources
 
 class LambdaFunctionStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs):
@@ -19,7 +20,7 @@ class LambdaFunctionStack(Stack):
             self, "CloudFrontInvalidationLambda",
             runtime=_lambda.Runtime.PYTHON_3_8,
             function_name="CloudFrontInvalidationLambda",
-            handler="lambda_function.lambda_handler",  # Ensure the handler matches your Lambda's file and function name
+            handler="lambda_function.lambda_handler",
             code=_lambda.Code.from_asset("Lambda/aswl.zip"),
         )
         #
@@ -43,21 +44,15 @@ class LambdaFunctionStack(Stack):
         #
         #
         #
-        # env_name = self.node.try_get_context("env")
-        #
-        # s3_arn = ssm.StringParameter.from_string_parameter_name(
-        #     self,
-        #     "s3-arn",
-        #     string_parameter_name=f"{env_name}-weight-calculator")
-        #
-        # web_bucket = s3.Bucket.from_bucket_arn(self, "web-bucket", s3_arn.string_value)
-        #
+               #
         # self.lambda_function.add_permission(
         #     's3-service-principal',
         #     principal=iam.ServicePrincipal('s3.amazonaws.com'),
         #     action='lambda:InvokeFunction',
         #     source_arn=web_bucket.bucket_arn,
         # )
+
+
 
 
 

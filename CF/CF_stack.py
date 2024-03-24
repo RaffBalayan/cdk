@@ -1,5 +1,6 @@
-from aws_cdk import Stack, aws_cloudfront as cdn, aws_ssm as ssm, aws_iam as iam, aws_s3 as s3,aws_route53 as r53,aws_route53_targets as targets
+from aws_cdk import Stack, aws_cloudfront as cdn, aws_ssm as ssm, aws_iam as iam, aws_s3 as s3,aws_lambda as _lambda,aws_route53 as r53,aws_route53_targets as targets
 from constructs import Construct
+
 import aws_cdk as cdk
 
 
@@ -30,6 +31,26 @@ class CFStack(Stack):
                 )
             ],
         )
+        cloudfront_distribution_arn = f"arn:aws:cloudfront::{self.account}:distribution/{self.cdn_id.distribution_id}"
+        #
+        # lambda_arn_parameter = ssm.StringParameter.from_string_parameter_name(
+        #     self,
+        #     "lambdaFunctionArn",
+        #     string_parameter_name="Lambda_arn"
+        # )
+        #
+        # lambda_function = _lambda.Function.from_function_arn(
+        #     self,
+        #     "LambdaFunction",
+        #     lambda_arn_parameter.string_value
+        # )
+        #
+        # lambda_function.add_to_role_policy(iam.PolicyStatement(
+        #     effect=iam.Effect.ALLOW,
+        #     actions=["cloudfront:CreateInvalidation"],
+        #     resources=[cloudfront_distribution_arn],
+        # ) )
+
 
         ssm.StringParameter(
             self,
@@ -44,6 +65,7 @@ class CFStack(Stack):
             parameter_name=f"/{env_name}/app-cdn-url",
             string_value=f"https://{self.cdn_id.distribution_domain_name}",
         )
+
 
         # ssm.StringParameter(
         #     self,
