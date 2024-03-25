@@ -39,11 +39,11 @@ class S3BucketStack(Stack):
             )
         )
 
-        distribution_id = ssm.StringParameter.from_string_parameter_name(
-            self,
-            "distribution_id",
-            string_parameter_name=f"/{env_name}/app-distribution-id"
-        ).string_value
+        # distribution_id = ssm.StringParameter.from_string_parameter_name(
+        #     self,
+        #     "distribution_id",
+        #     string_parameter_name=f"/{env_name}/app-distribution-id"
+        # ).string_value
 
         lambda_function = _lambda.Function(
             self, "CloudFrontInvalidationLambda",
@@ -51,9 +51,9 @@ class S3BucketStack(Stack):
             function_name="CloudFrontInvalidationLambda",
             handler="lambda_function.lambda_handler",
             code=_lambda.Code.from_asset("Lambda/awsla.zip"),
-            environment={
-                'cf_distribution_id': distribution_id
-            }
+            # environment={
+            #     'cf_distribution_id': distribution_id
+            # }
         )
 
 
@@ -66,11 +66,11 @@ class S3BucketStack(Stack):
                                 resources=[f"{web_bucket.bucket_arn}/*"]))
 
 
-        lambda_function.role.add_to_principal_policy(iam.PolicyStatement(
-            effect=iam.Effect.ALLOW,
-            actions=["cloudfront:CreateInvalidation"],
-            resources=[f"arn:aws:cloudfront::{account_id}:distribution/{distribution_id}"]
-        ))
+        # lambda_function.role.add_to_principal_policy(iam.PolicyStatement(
+        #     effect=iam.Effect.ALLOW,
+        #     actions=["cloudfront:CreateInvalidation"],
+        #     resources=[f"arn:aws:cloudfront::{account_id}:distribution/{distribution_id}"]
+        # ))
 
 
         lambda_function.add_permission(
@@ -87,11 +87,11 @@ class S3BucketStack(Stack):
 
         web_bucket.add_event_notification(s3.EventType.OBJECT_CREATED, s3n.LambdaDestination(lambda_function))
 
-        # lambda_function.role.add_to_principal_policy(iam.PolicyStatement(
-        #     effect=iam.Effect.ALLOW,
-        #     actions=["ssm:GetParameter"],
-        #     resources=[f"arn:aws:ssm:eu-central-1:{account_id}:parameter/{env_name}/app-distribution-id"]
-        # ))
+        lambda_function.role.add_to_principal_policy(iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=["ssm:GetParameter"],
+            resources=[f"arn:aws:ssm:eu-central-1:{account_id}:parameter/{env_name}/app-distribution-id"]
+        ))
 
 
         ssm.StringParameter(
@@ -103,4 +103,5 @@ class S3BucketStack(Stack):
 
         ssm.StringParameter(self, "lambda_name", parameter_name="Lambda_arn",
                             string_value=lambda_function.function_arn)
+
 

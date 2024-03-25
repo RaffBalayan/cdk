@@ -12,10 +12,23 @@ class Route53Stack(Stack):
         super().__init__(scope, construct_id, **kwargs)
         env_name = self.node.try_get_context("env")
 
+        distribution_id = ssm.StringParameter.from_string_parameter_name(
+            self,
+            "distribution_id",
+            string_parameter_name=f"/{env_name}/app-distribution-id"
+        ).string_value
+
+        cdn_url = ssm.StringParameter.from_string_parameter_name(
+            self,
+            "cdn_url",
+            string_parameter_name=f"/{env_name}/app-cdn-url"
+        ).string_value
+
+
         distribution = cf.Distribution.from_distribution_attributes(
             self, "MyImportedDistribution",
-            distribution_id="E1QEX8XV0GDSNS",
-            domain_name="d2ju9prb65yvht.cloudfront.net"
+            distribution_id=distribution_id,
+            domain_name=cdn_url
         )
 
 
@@ -24,7 +37,7 @@ class Route53Stack(Stack):
                                          zone_name ='callc.am')
 
 
-        route53.ARecord(self, "ARecord",
+        route53.ARecord(self, "AliasRecord",
                         zone=hosted_zone,
                         record_name="web",
                         target=route53.RecordTarget.from_alias(targets.CloudFrontTarget(distribution)))
